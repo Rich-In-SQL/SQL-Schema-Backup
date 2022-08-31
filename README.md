@@ -21,4 +21,4 @@ The server & database are both user defined parameters.
 
 ### Executing the script
 
-.\SQL-Schema-Backup.ps1 -database 'YourDatabase' -server 'YourServer' -SourceControlDirectory 'C:\Temp\' -logDirectory 'C:\Temp\Logs'
+`.\SQL-Schema-Backup.ps1 -database 'YourDatabase' -server 'YourServer' -SourceControlDirectory 'C:\Temp\' -logDirectory 'C:\Temp\Logs'`
