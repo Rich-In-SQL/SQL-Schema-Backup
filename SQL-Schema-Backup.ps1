@@ -30,7 +30,7 @@ if(-Not(Test-Path -Path $logFullPath -PathType Leaf))
         Write-Error $_.Exception.Message
     }
 }
-
+$SourceControlDirectory = $SourceControlDirectory + '\'
 $tablePath = $SourceControlDirectory + 'Tables'
 $storedProcedurePath = $SourceControlDirectory + 'StoredProcedures'
 $viewPath = $SourceControlDirectory + 'Views'
@@ -66,7 +66,7 @@ else
 
 if (-not (Test-Path -LiteralPath $storedProcedurePath)) 
 {    
-    Add-Content -Path $logFullPath -Value  "$(Get-Date -f yyyy-MM-dd-HH-mm) - Directory '$storedProcedurePath' doesn't exist, attempting to create." -ForegroundColor Yellow
+    Add-Content -Path $logFullPath -Value  "$(Get-Date -f yyyy-MM-dd-HH-mm) - Directory '$storedProcedurePath' doesn't exist, attempting to create." 
 
     try 
     {
