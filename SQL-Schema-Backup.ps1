@@ -17,6 +17,9 @@ Param(
 $logName = 'SQL-Schema-Export-'
 $logFileName = $logName + (Get-Date -f yyyy-MM-dd-HH-mm) + ".log"
 $logFullPath =  Join-Path $logDirectory $logFileName
+$logFileLimit = (Get-Date).AddDays(-15)
+
+Get-ChildItem -Path $logFullPath -Recurse -Force | Where-Object { !$_.PSIsContainer -and $_.CreationTime -lt $logFileLimit } | Remove-Item -Force
 
 if(-Not(Test-Path -Path $logFullPath -PathType Leaf))
 {
