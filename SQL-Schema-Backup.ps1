@@ -19,7 +19,15 @@ $logFileName = $logName + (Get-Date -f yyyy-MM-dd-HH-mm) + ".log"
 $logFullPath =  Join-Path $logDirectory $logFileName
 $logFileLimit = (Get-Date).AddDays(-15)
 
-Get-ChildItem -Path $logFullPath -Recurse -Force | Where-Object { !$_.PSIsContainer -and $_.CreationTime -lt $logFileLimit } | Remove-Item -Force
+try {
+    Add-Content -Path $logFullPath -Value "$(Get-Date -f "yyyy-MM-dd-HH-mm") - Attempting to delete old log files"
+    Get-ChildItem -Path $logFullPath -Recurse -Force | Where-Object { !$_.PSIsContainer -and $_.CreationTime -lt $logFileLimit } | Remove-Item -Force
+    Add-Content -Path $logFullPath -Value "$(Get-Date -f "yyyy-MM-dd-HH-mm") - Old log files deleted"
+
+}
+catch {
+    Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Unable to delete old log files from '$logFullPath'. The Error was: $_"
+}
 
 if(-Not(Test-Path -Path $logFullPath -PathType Leaf))
 {
@@ -30,7 +38,7 @@ if(-Not(Test-Path -Path $logFullPath -PathType Leaf))
     }
     catch 
     {
-        Write-Error $_.Exception.Message
+        Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Unable to log file in '$logFullPath'. The Error was: $_"
     }
 }
 $SourceControlDirectory = $SourceControlDirectory + '\'
@@ -43,7 +51,15 @@ if(Get-Module -ListAvailable -name dbatools)
     Import-Module -Name dbatools
 } else 
 {
-    Install-Module dbatools -Confirm $false
+    try 
+    {
+        Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Attempting to install dbatools as it is not present on this system."
+        Install-Module dbatools -Confirm $false
+        Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - DbaTools has now been installed."
+    }
+    catch {
+        Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Unable to install dbatools. The Error was: $_"
+    }
 }
 
 if (-not (Test-Path -LiteralPath $tablePath)) 
