@@ -1,6 +1,6 @@
 # Introduction
 
-This script uses [dbatools](https://dbatools.io/) to backup database objects from a SQL Server Database to a directory of your choosing. 
+This script uses [dbatools](https://dbatools.io/) to backup database objects from a SQL Server Database to a directory of your choosing. This script is used internally to backup our databases for GitHub.
 
 The server & database are both user defined parameters.
 
