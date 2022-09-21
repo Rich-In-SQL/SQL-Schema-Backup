@@ -45,6 +45,7 @@ $SourceControlDirectory = $SourceControlDirectory + '\'
 $tablePath = $SourceControlDirectory + 'Tables'
 $storedProcedurePath = $SourceControlDirectory + 'StoredProcedures'
 $viewPath = $SourceControlDirectory + 'Views'
+$constraintPath = $SourceControlDirectory + 'Constraints'
 
 if(Get-Module -ListAvailable -name dbatools)
 {
@@ -137,10 +138,23 @@ try
     $options.IncludeHeaders = $false
     $Options.NoCommandTerminator = $false
     $Options.ScriptBatchTerminator = $true
-    $options.DriAllConstraints = $true
+    $options.DriAllConstraints = $false
     $Options.AnsiFile = $true
 
     Get-DbaDbTable -SqlInstance $server -Database $database | ForEach-Object { Export-DbaScript -InputObject $_ -FilePath (Join-Path $tablePath -ChildPath "$($_.Name).sql") -ScriptingOptionsObject $options }
+
+    $options = New-DbaScriptingOption
+    $options.ContinueScriptingOnError = $false
+    $options.PrimaryObject = $false
+    $options.DriForeignKeys = $true
+    $options.Triggers = $true;
+
+    $allTables = Get-DbaDbTable -SqlInstance $server -Database $database
+
+    $constraintPath = $constraintPath + '\test.sql'
+
+    $allTables | Export-DbaScript -FilePath $constraintPath -ScriptingOptionsObject $options -EnableException -NoPrefix
+
 }
 catch 
 {
