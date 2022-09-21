@@ -74,6 +74,7 @@ $SourceControlDirectory = $SourceControlDirectory + '\'
 $tablePath = $SourceControlDirectory + 'Tables'
 $storedProcedurePath = $SourceControlDirectory + 'StoredProcedures'
 $viewPath = $SourceControlDirectory + 'Views'
+$constraintPath = $SourceControlDirectory + 'Constraints'
 
 if(-Not(Test-Path -Path $tablePath -PathType Leaf))
 {
@@ -133,5 +134,22 @@ foreach ($storedProcedure in $storedProcedures)
     } catch
     {
         Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Unable to install dbatools. The Error was: $_"
+    }
+}
+
+Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - The log file '$logFileName' has been created"
+$constraints = get-childitem $constraintsPath –Filter *.sql | sort-object Name
+Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Unable to install dbatools. The Error was: $_"
+
+foreach ($constraint in $constraints) 
+{
+    try {         
+
+        Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Attempting to restore Constraints"
+        Invoke-DbaQuery –SqlInstance $svr –File $constraint.FullName –Database $database
+
+    } catch
+    {
+        Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Unable to restore constraints. The Error was: $_"
     }
 }
