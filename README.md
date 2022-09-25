@@ -19,6 +19,10 @@ The server & database are both user defined parameters.
 2. Navigate to the directory where the script has been cloned
 3. Execute the script passing in the required parameters.
 
-### Executing the script
+### Executing the backup script
 
 `.\SQL-Schema-Backup.ps1 -database 'YourDatabase' -server 'YourServer' -SourceControlDirectory 'C:\Temp\' -logDirectory 'C:\Temp\Logs'`
+
+### Executing the restore script
+
+`.\SQL-Schema-Restore.ps1 -database 'YourDatabase' -server 'YourServer' -SourceControlDirectory 'C:\Temp\' -logDirectory 'C:\Temp\Logs'`
