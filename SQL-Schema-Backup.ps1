@@ -20,16 +20,6 @@ $logFullPath =  Join-Path $logDirectory $logFileName
 $logFileLimit = (Get-Date).AddDays(-15)
 $svr = Connect-dbaInstance -SqlInstance $server
 
-try {
-    Add-Content -Path $logFullPath -Value "$(Get-Date -f "yyyy-MM-dd-HH-mm") - Attempting to delete old log files"
-    Get-ChildItem -Path $logFullPath -Recurse -Force | Where-Object { !$_.PSIsContainer -and $_.CreationTime -lt $logFileLimit } | Remove-Item -Force
-    Add-Content -Path $logFullPath -Value "$(Get-Date -f "yyyy-MM-dd-HH-mm") - Old log files deleted"
-
-}
-catch {
-    Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Unable to delete old log files from '$logFullPath'. The Error was: $_"
-}
-
 if(-Not(Test-Path -Path $logFullPath -PathType Leaf))
 {
     try 
@@ -42,6 +32,19 @@ if(-Not(Test-Path -Path $logFullPath -PathType Leaf))
         Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Unable to log file in '$logFullPath'. The Error was: $_"
     }
 }
+
+try {
+    Add-Content -Path $logFullPath -Value "$(Get-Date -f "yyyy-MM-dd-HH-mm") - Attempting to delete old log files"
+    Get-ChildItem -Path $logFullPath -Recurse -Force | Where-Object { !$_.PSIsContainer -and $_.CreationTime -lt $logFileLimit } | Remove-Item -Force
+    Add-Content -Path $logFullPath -Value "$(Get-Date -f "yyyy-MM-dd-HH-mm") - Old log files deleted"
+
+}
+catch {
+    Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Unable to delete old log files from '$logFullPath'. The Error was: $_"
+}
+
+Write-Host -Message "$(Get-Date -f yyyy-MM-dd-HH-mm) - Script starting" -ForegroundColor Gray
+Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Script starting" 
 
 $SourceControlDirectory = $SourceControlDirectory + '\'
 $tablePath = $SourceControlDirectory + 'Tables'
@@ -128,9 +131,9 @@ else
     Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - '$viewPath' already existed"
 }
 
-if (-not (Test-Path -LiteralPath $constraintPath)) 
+if (-not (Test-Path -Path $constraintPath)) 
 {
-    Add-Content -Path $constraintPath -Value  "$(Get-Date -f yyyy-MM-dd-HH-mm) - Directory '$constraintPath' doesn't exist, attempting to create." 
+    Add-Content -Path $logFullPath -Value  "$(Get-Date -f yyyy-MM-dd-HH-mm) - Directory '$constraintPath' doesn't exist, attempting to create." 
     
     try 
     {
@@ -139,17 +142,15 @@ if (-not (Test-Path -LiteralPath $constraintPath))
     catch 
     {
         Write-Error -Message "Unable to create directory '$constraintPath'. Error was: $_" -ErrorAction Stop
-        Add-Content -Path $constraintPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Unable to create directory '$constraintPath'. Error was: $_"
+        Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Unable to create directory '$constraintPath'. Error was: $_"
     }
 
-    Add-Content -Path $constraintPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Successfully created directory '$constraintPath'."
+    Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Successfully created directory '$constraintPath'."
 }
 else 
 {
-    Add-Content -Path $constraintPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - '$constraintPath' already existed"
+    Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - '$constraintPath' already existed"
 }
-
-Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Script starting" 
 
 try 
 {
@@ -160,6 +161,7 @@ try
     $options.IncludeDatabaseContext  = $true
     $options.IncludeHeaders = $false
     $Options.NoCommandTerminator = $false
+    $options.DriPrimaryKey = $true
     $Options.ScriptBatchTerminator = $true
     $options.DriAllConstraints = $false
     $Options.AnsiFile = $true
@@ -174,49 +176,52 @@ try
 
     $options = New-DbaScriptingOption
     $options.ContinueScriptingOnError = $false
-    $options.PrimaryObject = $false
+    $options.PrimaryObject = $false    
     $options.DriForeignKeys = $true
     $options.Triggers = $true;
 
     $allTables = Get-DbaDbTable -SqlInstance $server -Database $database
-    $constraintPath = $constraintPath + '\constraints.sql'
+    $constraintFilePath = $constraintPath + '\constraints.sql'
 
-    Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Attempting to export constraints to $constrainPath" 
+    Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Attempting to export constraints to $constraintFilePath" 
 
-    try {
-        $allTables | Export-DbaScript -FilePath $constraintPath -ScriptingOptionsObject $options -EnableException -NoPrefix    
+    try 
+    {
+        $allTables | Export-DbaScript -FilePath $constraintFilePath -ScriptingOptionsObject $options -EnableException -NoPrefix    
     }
     catch {
-        Write-Error -Message "Unable to create directory '$constraintPath'. Error was: $_" -ErrorAction Stop
-        Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Unable to create directory '$constraintPath'. Error was: $_"
+        Write-Error -Message "Unable to export constraints to '$constraintFilePath'. Error was: $_" -ErrorAction Stop
+        Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Unable to export constraints to '$constraintPath'. Error was: $_"
     }
 }
 catch 
 {
-    Write-Error -Message "Unable to create directory '$viewPath'. Error was: $_" -ErrorAction Stop
-    Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Unable to create directory '$viewPath'. Error was: $_" 
+    Write-Error -Message "Unable to export table objects '$tablePath'. Error was: $_" -ErrorAction Stop
+    Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Unable to export table objects '$tablePath'. Error was: $_" 
 }
+
+Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Attempting to export Stored Procedures to '$tablePath' for instance '$server' from database '$database'" 
 
 try 
 {
-    Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Attempting to export Stored Procedures to '$tablePath' for instance '$server' from database '$database'" 
-
     Get-DbaDbStoredProcedure -SqlInstance $svr -Database $database -ExcludeSystemSp | ForEach-Object { Export-DbaScript -InputObject $_ -FilePath (Join-Path $storedProcedurePath -ChildPath "$($_.Name).sql") -ScriptingOptionsObject $options }
 }
 catch 
 {
-    Write-Error -Message "Unable to create directory '$viewPath'. Error was: $_" -ErrorAction Stop
-    Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Unable to create directory '$viewPath'. Error was: $_" 
+    Write-Error -Message "Unable to export stored procedures '$viewPath'. Error was: $_" -ErrorAction Stop
+    Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Unable to export stored procedures '$viewPath'. Error was: $_" 
 }
+
+Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Attempting to export Views to '$viewPath' for instance '$server' from database '$database'" 
 
 try 
 {
-    Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Attempting to export Views to '$viewPath' for instance '$server' from database '$database'" 
-
     Get-DbaDbView -SqlInstance $svr -Database $database -ExcludeSystemView | ForEach-Object { Export-DbaScript -InputObject $_ -FilePath (Join-Path $viewPath -ChildPath "$($_.Name).sql") -ScriptingOptionsObject $options }
 }
 catch 
 {
-    Write-Error -Message "Unable to create directory '$viewPath'. Error was: $_" -ErrorAction Stop
-    Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Unable to create directory '$viewPath'. Error was: $_" 
+    Write-Error -Message "Unable to export Views to '$viewPath'. Error was: $_" -ErrorAction Stop
+    Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Unable to export Views to '$viewPath'. Error was: $_" 
 }
+
+Write-Host -Message "$(Get-Date -f yyyy-MM-dd-HH-mm) - Script Complete" -ForegroundColor Gray
