@@ -68,7 +68,7 @@ if(Get-Module -ListAvailable -name dbatools)
     }
 }
 
-if (-not (Test-Path -LiteralPath $tablePath)) 
+if (-not (Test-Path -LiteralPath $tablePath) -and (Get-DbaDbTable -SqlInstance $svr -Database $database | Measure-Object).Count -gt 0)
 {
     Add-Content -Path $logFullPath -Value  "$(Get-Date -f yyyy-MM-dd-HH-mm) - Directory '$tablePath' doesn't exist, attempting to create." 
     
@@ -89,7 +89,7 @@ else
     Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - '$tablePath' already existed"
 }
 
-if (-not (Test-Path -LiteralPath $storedProcedurePath)) 
+if (-not (Test-Path -LiteralPath $storedProcedurePath) -and (Get-DbaDbStoredProcedure -SqlInstance $svr -Database $database -ExcludeSystemSp | Measure-Object).Count -gt 0) 
 {    
     Add-Content -Path $logFullPath -Value  "$(Get-Date -f yyyy-MM-dd-HH-mm) - Directory '$storedProcedurePath' doesn't exist, attempting to create." 
 
@@ -110,7 +110,7 @@ else
     Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - '$storedProcedurePath' already existed"
 }
 
-if (-not (Test-Path -LiteralPath $viewPath)) 
+if (-not (Test-Path -LiteralPath $viewPath) -and (Get-DbaDbView -SqlInstance $svr -Database $database -ExcludeSystemView | Measure-Object).Count -gt 0) 
 {    
     Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Directory '$viewPath' doesn't exist, attempting to create."
 
@@ -131,7 +131,7 @@ else
     Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - '$viewPath' already existed"
 }
 
-if (-not (Test-Path -Path $constraintPath)) 
+if (-not (Test-Path -Path $constraintPath) -and (Get-DbaDbTable -SqlInstance $svr -Database $database | Measure-Object).Count -gt 0) 
 {
     Add-Content -Path $logFullPath -Value  "$(Get-Date -f yyyy-MM-dd-HH-mm) - Directory '$constraintPath' doesn't exist, attempting to create." 
     
@@ -166,7 +166,7 @@ try
     $options.DriAllConstraints = $false
     $Options.AnsiFile = $true
 
-    try {
+    try {        
         Get-DbaDbTable -SqlInstance $svr -Database $database | ForEach-Object { Export-DbaScript -InputObject $_ -FilePath (Join-Path $tablePath -ChildPath "$($_.Name).sql") -ScriptingOptionsObject $options }
     }
     catch {
