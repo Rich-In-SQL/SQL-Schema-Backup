@@ -50,6 +50,7 @@ $SourceControlDirectory = $SourceControlDirectory + '\'
 $tablePath = $SourceControlDirectory + 'Tables'
 $storedProcedurePath = $SourceControlDirectory + 'StoredProcedures'
 $viewPath = $SourceControlDirectory + 'Views'
+$schemaPath = $SourceControlDirectory + 'Schemas'
 $constraintPath = $SourceControlDirectory + 'Constraints'
 
 if(Get-Module -ListAvailable -name dbatools)
@@ -87,6 +88,27 @@ if (-not (Test-Path -LiteralPath $tablePath) -and (Get-DbaDbTable -SqlInstance $
 else 
 {
     Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - '$tablePath' already existed"
+}
+
+if (-not (Test-Path -LiteralPath $schemaPath) -and (Get-DbaDbStoredProcedure -SqlInstance $svr -Database $database -ExcludeSystemSp | Measure-Object).Count -gt 0) 
+{    
+    Add-Content -Path $logFullPath -Value  "$(Get-Date -f yyyy-MM-dd-HH-mm) - Directory '$schemaPath' doesn't exist, attempting to create." 
+
+    try 
+    {
+        New-Item -Path $schemaPath -ItemType Directory -ErrorAction Stop | Out-Null #-Force
+    }
+    catch 
+    {
+        Write-Error -Message "Unable to create directory '$schemaPath'. Error was: $_" -ErrorAction Stop
+        Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Unable to create directory '$schemaPath'. Error was: $_" -ErrorAction Stop
+    }
+    
+    Add-Content -Path $logFullPath -Value "Successfully created directory '$schemaPath'."
+}
+else 
+{
+    Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - '$schemaPath' already existed"
 }
 
 if (-not (Test-Path -LiteralPath $storedProcedurePath) -and (Get-DbaDbStoredProcedure -SqlInstance $svr -Database $database -ExcludeSystemSp | Measure-Object).Count -gt 0) 
@@ -198,6 +220,18 @@ catch
 {
     Write-Error -Message "Unable to export table objects '$tablePath'. Error was: $_" -ErrorAction Stop
     Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Unable to export table objects '$tablePath'. Error was: $_" 
+}
+
+Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Attempting to export Stored Procedures to '$tablePath' for instance '$server' from database '$database'" 
+
+try 
+{
+    Get-DbaDbSchema -SqlInstance $svr -Database $database | ForEach-Object { Export-DbaScript -InputObject $_ -FilePath (Join-Path $schemaPath -ChildPath "$($_.Name).sql") }
+}
+catch 
+{
+    Write-Error -Message "Unable to export stored procedures '$schemaPath'. Error was: $_" -ErrorAction Stop
+    Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Unable to export stored procedures '$schemaPath'. Error was: $_" 
 }
 
 Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Attempting to export Stored Procedures to '$tablePath' for instance '$server' from database '$database'" 
