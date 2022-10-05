@@ -29,7 +29,7 @@ if(-Not(Test-Path -Path $logFullPath -PathType Leaf))
     }
     catch 
     {
-        Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Unable to log file in '$logFullPath'. The Error was: $_"
+        Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Unable to log file in '$logFullPath'. The Error was: $error"
     }
 }
 
@@ -40,7 +40,7 @@ try {
 
 }
 catch {
-    Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Unable to delete old log files from '$logFullPath'. The Error was: $_"
+    Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Unable to delete old log files from '$logFullPath'. The Error was: $error"
 }
 
 Write-Host -Message "$(Get-Date -f yyyy-MM-dd-HH-mm) - Script starting" -ForegroundColor Gray
@@ -65,7 +65,7 @@ if(Get-Module -ListAvailable -name dbatools)
         Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - DbaTools has now been installed."
     }
     catch {
-        Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Unable to install dbatools. The Error was: $_"
+        Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Unable to install dbatools. The Error was: $error"
     }
 }
 
@@ -79,8 +79,8 @@ if (-not (Test-Path -LiteralPath $tablePath) -and (Get-DbaDbTable -SqlInstance $
     }
     catch 
     {
-        Write-Error -Message "Unable to create directory '$tablePath'. Error was: $_" -ErrorAction Stop
-        Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Unable to create directory '$tablePath'. Error was: $_"
+        Write-Error -Message "Unable to create directory '$tablePath'. Error was: $error" -ErrorAction Stop
+        Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Unable to create directory '$tablePath'. Error was: $error"
     }
 
     Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Successfully created directory '$tablePath'."
@@ -100,8 +100,8 @@ if (-not (Test-Path -LiteralPath $schemaPath) -and (Get-DbaDbStoredProcedure -Sq
     }
     catch 
     {
-        Write-Error -Message "Unable to create directory '$schemaPath'. Error was: $_" -ErrorAction Stop
-        Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Unable to create directory '$schemaPath'. Error was: $_" -ErrorAction Stop
+        Write-Error -Message "Unable to create directory '$schemaPath'. Error was: $error" -ErrorAction Stop
+        Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Unable to create directory '$schemaPath'. Error was: $error" -ErrorAction Stop
     }
     
     Add-Content -Path $logFullPath -Value "Successfully created directory '$schemaPath'."
@@ -121,8 +121,8 @@ if (-not (Test-Path -LiteralPath $storedProcedurePath) -and (Get-DbaDbStoredProc
     }
     catch 
     {
-        Write-Error -Message "Unable to create directory '$storedProcedurePath'. Error was: $_" -ErrorAction Stop
-        Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Unable to create directory '$storedProcedurePath'. Error was: $_" -ErrorAction Stop
+        Write-Error -Message "Unable to create directory '$storedProcedurePath'. Error was: $error" -ErrorAction Stop
+        Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Unable to create directory '$storedProcedurePath'. Error was: $error" -ErrorAction Stop
     }
     
     Add-Content -Path $logFullPath -Value "Successfully created directory '$storedProcedurePath'."
@@ -142,8 +142,8 @@ if (-not (Test-Path -LiteralPath $viewPath) -and (Get-DbaDbView -SqlInstance $sv
     }
     catch 
     {
-        Write-Error -Message "Unable to create directory '$viewPath'. Error was: $_" -ErrorAction Stop
-        Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Unable to create directory '$viewPath'. Error was: $_"
+        Write-Error -Message "Unable to create directory '$viewPath'. Error was: $error" -ErrorAction Stop
+        Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Unable to create directory '$viewPath'. Error was: $error"
     }
 
     Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Successfully created directory '$viewPath'."
@@ -163,8 +163,8 @@ if (-not (Test-Path -Path $constraintPath) -and (Get-DbaDbTable -SqlInstance $sv
     }
     catch 
     {
-        Write-Error -Message "Unable to create directory '$constraintPath'. Error was: $_" -ErrorAction Stop
-        Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Unable to create directory '$constraintPath'. Error was: $_"
+        Write-Error -Message "Unable to create directory '$constraintPath'. Error was: $error" -ErrorAction Stop
+        Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Unable to create directory '$constraintPath'. Error was: $error"
     }
 
     Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Successfully created directory '$constraintPath'."
@@ -192,8 +192,8 @@ try
         Get-DbaDbTable -SqlInstance $svr -Database $database | ForEach-Object { Export-DbaScript -InputObject $_ -FilePath (Join-Path $tablePath -ChildPath "$($_.Name).sql") -ScriptingOptionsObject $options }
     }
     catch {
-        Write-Error -Message "Unable to export tables to '$tablePath'. Error was: $_" -ErrorAction Stop
-        Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Unable to export tables to '$tablePath'. Error was: $_"
+        Write-Error -Message "Unable to export tables to '$tablePath'. Error was: $error" -ErrorAction Stop
+        Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Unable to export tables to '$tablePath'. Error was: $error"
     }
 
     $options = New-DbaScriptingOption
@@ -212,14 +212,14 @@ try
         $allTables | Export-DbaScript -FilePath $constraintFilePath -ScriptingOptionsObject $options -EnableException -NoPrefix    
     }
     catch {
-        Write-Error -Message "Unable to export constraints to '$constraintFilePath'. Error was: $_" -ErrorAction Stop
-        Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Unable to export constraints to '$constraintPath'. Error was: $_"
+        Write-Error -Message "Unable to export constraints to '$constraintFilePath'. Error was: $error" -ErrorAction Stop
+        Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Unable to export constraints to '$constraintPath'. Error was: $error"
     }
 }
 catch 
 {
-    Write-Error -Message "Unable to export table objects '$tablePath'. Error was: $_" -ErrorAction Stop
-    Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Unable to export table objects '$tablePath'. Error was: $_" 
+    Write-Error -Message "Unable to export table objects '$tablePath'. Error was: $error" -ErrorAction Stop
+    Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Unable to export table objects '$tablePath'. Error was: $error" 
 }
 
 Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Attempting to export Stored Procedures to '$tablePath' for instance '$server' from database '$database'" 
@@ -230,8 +230,8 @@ try
 }
 catch 
 {
-    Write-Error -Message "Unable to export stored procedures '$schemaPath'. Error was: $_" -ErrorAction Stop
-    Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Unable to export stored procedures '$schemaPath'. Error was: $_" 
+    Write-Error -Message "Unable to export stored procedures '$schemaPath'. Error was: $error" -ErrorAction Stop
+    Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Unable to export stored procedures '$schemaPath'. Error was: $error" 
 }
 
 Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Attempting to export Stored Procedures to '$tablePath' for instance '$server' from database '$database'" 
@@ -242,8 +242,8 @@ try
 }
 catch 
 {
-    Write-Error -Message "Unable to export stored procedures '$viewPath'. Error was: $_" -ErrorAction Stop
-    Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Unable to export stored procedures '$viewPath'. Error was: $_" 
+    Write-Error -Message "Unable to export stored procedures '$viewPath'. Error was: $error" -ErrorAction Stop
+    Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Unable to export stored procedures '$viewPath'. Error was: $error" 
 }
 
 Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Attempting to export Views to '$viewPath' for instance '$server' from database '$database'" 
@@ -254,8 +254,8 @@ try
 }
 catch 
 {
-    Write-Error -Message "Unable to export Views to '$viewPath'. Error was: $_" -ErrorAction Stop
-    Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Unable to export Views to '$viewPath'. Error was: $_" 
+    Write-Error -Message "Unable to export Views to '$viewPath'. Error was: $error" -ErrorAction Stop
+    Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Unable to export Views to '$viewPath'. Error was: $error" 
 }
 
 Write-Host -Message "$(Get-Date -f yyyy-MM-dd-HH-mm) - Script Complete" -ForegroundColor Gray
