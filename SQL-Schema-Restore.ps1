@@ -89,6 +89,9 @@ Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Added t
 $tablePath = $SourceControlDirectory + 'Tables'
 Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Set Constraint Path $tablePath"
 
+$schemaPath = $SourceControlDirectory + 'Schemas'
+Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Set Schema Path $schemaPath"
+
 $storedProcedurePath = $SourceControlDirectory + 'StoredProcedures'
 Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Set Constraint Path $storedProcedurePath"
 
@@ -97,6 +100,52 @@ Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Set Con
 
 $constraintPath = $SourceControlDirectory + 'Constraints'
 Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Set Constraint Path $constraintPath"
+
+Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Attempting to get Schema Files"
+
+if(Test-Path -LiteralPath $schemaPath -PathType Container)
+{
+    Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Getting a count of files from $schemaPath"
+
+    $schemaTotal = get-childitem $schemaPath –Filter *.sql | Measure-Object | ForEach-Object{$_.Count} 
+
+    if($schemaTotal -ne 0)
+    {
+        Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - $schemaTotal files found in $schemaPath"
+
+        $schemas = get-childitem $schemaPath –Filter *.sql | sort-object Name
+
+        Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) -  Attempting to get view files from $schemaPath"
+
+        foreach ($schema in $schemas) 
+        {
+            $schemaFullName = $schema.FullName
+            
+            Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Checking to make sure $schemaFullName is not empty"
+
+            if((([IO.File]::ReadAllText($schema)) -match '\S') -eq $True)
+            {
+                try {
+
+                    Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Attempting to restore $schema"
+                    Invoke-DbaQuery –SqlInstance $svr –File $schema.FullName –Database $database
+                    Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Restored $schema"
+
+                } catch
+                {
+                    Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Unable to restore $schema. The Error was: $error"
+                }
+            }
+            else {
+                Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - $schema is empty, no need to restore."
+            }
+        }
+    } else {
+        Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - $schemaPath exists, but no files were found skipping"
+    }
+} else {
+    Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - $schemaPath doesn't exist, skipping"
+}
 
 Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Attempting to get table files"
 
