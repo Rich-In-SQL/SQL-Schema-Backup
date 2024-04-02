@@ -21,8 +21,12 @@ The server & database are both user defined parameters.
 
 ### Executing the backup script
 
-`.\SQL-Schema-Backup.ps1 -database 'YourDatabase' -server 'YourServer' -SourceControlDirectory 'C:\Temp\' -logDirectory 'C:\Temp\Logs'`
+`.\SQL-Schema-Backup.ps1 -database 'YourDatabase' -server 'YourServer' -SourceControlDirectory 'C:\Temp\' -logDirectory 'C:\Temp\Logs' -pushToGit $True`
 
 ### Executing the restore script
 
 `.\SQL-Schema-Restore.ps1 -database 'YourDatabase' -server 'YourServer' -SourceControlDirectory 'C:\Temp\' -logDirectory 'C:\Temp\Logs'`
+
+### Notes
+
+These scripts make use of [smo.scriptingoptions](https://learn.microsoft.com/en-us/dotnet/api/microsoft.sqlserver.management.smo.scriptingoptions?view=sql-smo-160)
