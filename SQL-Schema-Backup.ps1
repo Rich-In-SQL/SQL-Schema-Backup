@@ -11,7 +11,10 @@ Param(
     $SourceControlDirectory,
     [Parameter(Mandatory=$True, Position=3, ValueFromPipeline=$false)]
     [System.String]
-    $logDirectory
+    $logDirectory,
+    [Parameter(Mandatory=$True, Position=4, ValueFromPipeline=$false)]
+    [System.Boolean]
+    $pushToGit
 )
 
 $logName = 'SQL-Schema-Export-'
@@ -158,13 +161,13 @@ try
 
     $options = New-DbaScriptingOption
     $options.ScriptSchema = $true
-    $options.IncludeDatabaseContext  = $true
+    $options.IncludeDatabaseContext  = $false
     $options.IncludeHeaders = $false
     $Options.NoCommandTerminator = $false
     $options.DriPrimaryKey = $true
     $Options.ScriptBatchTerminator = $true
     $options.DriAllConstraints = $false
-    $Options.AnsiFile = $true
+    $Options.AnsiFile = $true;
 
     try {        
         Get-DbaDbTable -SqlInstance $svr -Database $database | ForEach-Object { Export-DbaScript -InputObject $_ -FilePath (Join-Path $tablePath -ChildPath "$($_.Name).sql") -ScriptingOptionsObject $options }
@@ -176,8 +179,10 @@ try
 
     $options = New-DbaScriptingOption
     $options.ContinueScriptingOnError = $false
-    $options.PrimaryObject = $false    
+    $options.PrimaryObject = $false 
+    $options.DriAllKeys = $true   
     $options.DriForeignKeys = $true
+    $options.IncludeHeaders = $false
     $options.Triggers = $true;
 
     $allTables = Get-DbaDbTable -SqlInstance $server -Database $database
@@ -222,6 +227,21 @@ catch
 {
     Write-Error -Message "Unable to export Views to '$viewPath'. Error was: $_" -ErrorAction Stop
     Add-Content -Path $logFullPath -Value "$(Get-Date -f yyyy-MM-dd-HH-mm) - Unable to export Views to '$viewPath'. Error was: $_" 
+}
+
+if($pushToGit -eq $true) {
+
+    Set-Location $SourceControlDirectory
+
+    Write-Host -Message "Staging all changes to git" -ForegroundColor Gray
+    git add . 
+
+    Write-Host -Message "Commiting changes to git" -ForegroundColor Gray
+    git commit -m "$(Get-Date -f yyyy-MM-dd-HH-mm) backup"
+
+    Write-Host -Message "Pushing changes to the remote git repository" -ForegroundColor Gray
+    git push origin main
+
 }
 
 Write-Host -Message "$(Get-Date -f yyyy-MM-dd-HH-mm) - Script Complete" -ForegroundColor Gray
